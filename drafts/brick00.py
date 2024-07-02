@@ -64,7 +64,7 @@ class Sumo:
         self.l1_motor.reset_angle(0)
 
 
-brick00 = Sumo(100,4.5,11.8)
+brick00 = Sumo(100,4.2,12.8)
 
 def right(angle, speed):
         brick00.reset_angle()
