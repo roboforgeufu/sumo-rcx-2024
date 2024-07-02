@@ -7,6 +7,7 @@ from pybricks.tools import wait, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from time import sleep
+from math import pi
 
 ev3 = EV3Brick()
 
@@ -16,13 +17,13 @@ class Sumo:
     def _init_(self, velocidade, wheel_diameter, wheel_distance):
         self.velocidade = velocidade
         self.wheel_diameter = wheel_diameter
-        self.wheel_lenght = wheel_diameter * 3.1415
+        self.wheel_length = wheel_diameter * pi
         self.wheel_distance = wheel_distance
         self.r_motor = Motor(Port.A) 
         self.l_motor = Motor(Port.B)
         self.r1_motor = Motor(Port.D) # Motores que levam sinais de contrário na frente deles
         self.l1_motor = Motor(Port.C) # Motores que levam sinais de contrário na frente deles
-        self.ultra_sens1 = UltrasonicSensor(Port.S1) # S ensor ultrassônico frontal direito
+        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal direito
         self.ultra_sens2 = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
         self.color_sens1 = ColorSensor(Port.S3) # Sensor de cor traseiro
         self.color_sens2 = ColorSensor(Port.S4) # Sensor de cor frontal
@@ -34,10 +35,10 @@ class Sumo:
         self.l1_motor.run(-speed)
 
     def attack(self, speed=450): # Ataque com mais velocidade
-            self.r_motor.run(speed)
-            self.l_motor.run(speed)
-            self.r1_motor.run(-speed)
-            self.l1_motor.run(-speed)
+        self.r_motor.run(speed)
+        self.l_motor.run(speed)
+        self.r1_motor.run(-speed)
+        self.l1_motor.run(-speed)
     
     def dc(self, dc): # Função para testar um novo tipo de ataque
         self.r_motor.dc(dc)
@@ -45,11 +46,12 @@ class Sumo:
         self.r1_motor.dc(-dc)
         self.l1_motor.dc(-dc)
 
-    def hold_motors(self): # Stops the motor and actively holds it at its current angle (from official documentation)
+    def hold_motors(self, time=0): # Stops the motor and actively holds it at its current angle (from official documentation)
         self.r_motor.hold()
         self.l_motor.hold()
         self.r1_motor.hold()
         self.l1_motor.hold()
+        sleep(time)
 
     def brake_motors(self): # The motor stops due to friction, plus the voltage that is generated while the motor is still moving (from official documentation)
         self.r_motor.brake()
@@ -63,96 +65,86 @@ class Sumo:
         self.r1_motor.reset_angle(0)
         self.l1_motor.reset_angle(0)
 
-
-brick00 = Sumo(100,4.2,12.8)
-
-def right(angle, speed):
-        brick00.reset_angle()
-        
+    def right(self, angle, speed):
+        self.reset_angle()
         media_motor = 0
         graus_motor = angle * (brick00.wheel_distance / brick00.wheel_diameter)
-        while media_motor < graus_motor:
-            brick00.l_motor.run(speed)
-            brick00.r_motor.run(-speed)
-            brick00.r1_motor.run(speed)
-            brick00.l1_motor.run(-speed)
-            
-            media_motor = ((abs(brick00.l_motor.angle()) + abs(brick00.l1_motor.angle())) - (abs(brick00.r_motor.angle()) + abs(brick00.r1_motor.angle()))) / 2 
         
-        brick00.hold_motors()
+        while media_motor < graus_motor:
+            self.l_motor.run(speed)
+            self.r_motor.run(-speed)
+            self.r1_motor.run(speed)
+            self.l1_motor.run(-speed)
+            media_motor = ((brick00.l_motor.angle() - brick00.l1_motor.angle()) - (brick00.r_motor.angle() - brick00.r1_motor.angle())) / 2
+            
+        self.hold_motors()
 
-def right_until(speed, HOLD=True):
-    brick00.reset_angle()
-
-    while not brick00.ultra_sens1.distance() and not brick00.ultra_sens2.distance():
-        brick00.l_motor.run(speed)
-        brick00.r_motor.run(-speed)
-        brick00.r1_motor.run(speed)
-        brick00.l1_motor.run(-speed)
-    if HOLD:
-        brick00.hold_motors()
-
-def left(angle, speed):
-        brick00.reset_angle()
-       
+    def left(self,angle, speed):
+        self.reset_angle()
         media_motor = 0
         graus_motor = angle * (brick00.wheel_distance / brick00.wheel_diameter) 
         while media_motor < graus_motor: # Para de girar até identificar que girou o ângulo ideal
-            brick00.l_motor.run(-speed)
-            brick00.r_motor.run(speed)
-            brick00.r1_motor.run(-speed)
-            brick00.l1_motor.run(speed)
-            
-            media_motor = ((abs(brick00.l_motor.angle()) + abs(brick00.l1_motor.angle())) - (abs(brick00.r_motor.angle()) + abs(brick00.r1_motor.angle()))) / 2 
-        
-        brick00.hold_motors()
-        
-def left_until(speed, HOLD=True):
-    brick00.reset_angle()
+            self.l_motor.run(-speed)
+            self.r_motor.run(speed)
+            self.r1_motor.run(-speed)
+            self.l1_motor.run(speed)
+            media_motor = ((- brick00.l_motor.angle() + brick00.l1_motor.angle()) - (- brick00.r_motor.angle() + brick00.r1_motor.angle())) / 2   
+              
+        self.hold_motors()
 
-    while not brick00.ultra_sens1.distance() and not brick00.ultra_sens2.distance():
-        brick00.l_motor.run(-speed)
-        brick00.r_motor.run(speed)
-        brick00.r1_motor.run(-speed)
-        brick00.l1_motor.run(speed)
-    if HOLD:
-        brick00.hold_motors()
+    def right_until(self,speed, HOLD=True): # Gira para a direita até encontrar o oponente
+        self.reset_angle()
+        while not brick00.ultra_sens1.distance() and not brick00.ultra_sens2.distance():
+            self.l_motor.run(speed)
+            self.r_motor.run(-speed)
+            self.r1_motor.run(speed)
+            self.l1_motor.run(-speed)
+        if HOLD:
+            self.hold_motors()
+    
+    def left_until(self,speed, HOLD=True): # Gira para a esquerda até encontrar o oponente
+        self.reset_angle()
 
+        while not brick00.ultra_sens1.distance() and not brick00.ultra_sens2.distance():
+            self.l_motor.run(-speed)
+            self.r_motor.run(speed)
+            self.r1_motor.run(-speed)
+            self.l1_motor.run(speed)
+        if HOLD:
+            self.hold_motors()
+
+    def detect_object(sensor, threshold=100):
+        return sensor.distance() < threshold # Retornar um Booleano
+        
+    def detect_color(sensor):
+        return sensor.color() == Color.WHITE
+
+brick00 = Sumo(100, 4.2, 12.8)
+""" Estratégias do brick00 de movimentação"""
 def search(speed, HOLD):
     brick00.right_until(speed, HOLD)
     sleep(0.3)
-    brick00.left_unitl(speed, HOLD)
+    brick00.left_until(speed, HOLD)
 
-def detect_object(sensor, threshold = 100): # Talvez transformar como método da classe
-    return sensor.distance() < threshold # Retornar um Booleano
-        
-def detect_color(sensor):
-    if sensor.Color.WHITE():
-        return True
-    return False
+def search_star(angle):
+    brick00.right(angle,200)
+    brick00.walk(100)
+    sleep(1.5)
+    brick00.left(angle + 20, 200)
+    brick00.walk(100)
+    sleep(1.5)
 
-
-""" Estratégia por enquanto: enquanto ele estiver vendo a cor preta ele continua procurando e atacando. Se identificar o branco ele vai "reto" p/ meio
-Na verdade precisamos melhorar a identificação dos casos do branco, pq assim tá muito podre
-"""
 def main():
     THRESHOLD = 100
-    flag = 0
+    flag = False
     
     while not flag:  # Espera pelo botão central
         for button in ev3.buttons.pressed():
             print(button)
             if button == Button.CENTER:
-                flag = 1
+                flag = True
     while True:
-        while not detect_color(brick00.color_sens1) and not detect_color(brick00.color2): 
-            search(300, True) 
-            brick00.dc(90)
-        if detect_color(brick00.color_sens1):
-            brick00.walk(300)
-            sleep(3)
-        if detect_color(brick00.color_sens2):
-            brick00.walk(-300)
-            sleep(3)
-    
+        search_star(45)
+
+        
 main()
