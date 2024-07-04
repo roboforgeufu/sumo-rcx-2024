@@ -7,6 +7,7 @@ from pybricks.tools import wait, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from time import sleep
+from math import pi
 
 # Mesmo código que o brick00
 
@@ -16,14 +17,16 @@ class Sumo:
     def __init__(self, velocidade, wheel_diameter, wheel_distance):
         self.velocidade = velocidade
         self.wheel_diameter = wheel_diameter
-        self.wheel_lenght = wheel_diameter * 3.1415
+        self.wheel_length = wheel_diameter * pi
         self.wheel_distance = wheel_distance
         self.r_motor = Motor(Port.A) 
         self.l_motor = Motor(Port.B)
         self.r1_motor = Motor(Port.D) # Motores que levam sinais de contrário na frente deles
         self.l1_motor = Motor(Port.C) # Motores que levam sinais de contrário na frente deles
-        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal (qual lado?)
-        self.ultra_sens2 = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal (qual lado?)
+        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal direito
+        self.infra_sens2 = UltrasonicSensor(Port.S2) # Sensor infravermelho frontal esquerdo
+        self.color_sens1 = ColorSensor(Port.S3) # Sensor de cor traseiro
+        self.color_sens2 = ColorSensor(Port.S4) # Sensor de cor frontal
      
     def walk(self, speed=300): # Andar para frente, vale ressaltar que os motores de cada lado estão espelhados
         self.r_motor.run(speed)
@@ -118,22 +121,9 @@ def main():
             if button == Button.CENTER:
                 flag = 1
 
-    robo_sumo.walk()
-    sleep(2)
-    robo_sumo.free_left_curve()
-    sleep(4)
-    
-    """while True:
-        left_sensor = detect_object(robo_sumo.ultra_sens1.distance())
-        right_sensor = detect_object(robo_sumo.ultra_sens2.distance())
-    
-        if left_sensor and not right_sensor:
-            robo_sumo.left()
-        elif right_sensor and not left_sensor:
-            robo_sumo.right()
-        elif right_sensor and left_sensor:
-            robo_sumo.attack() # colocar nas funções a tratativa de parar se ver a linha da borda
-        else:
-            search()"""
+    robo_sumo.r_motor.run(300)
+    robo_sumo.l_motor.run(300)
+    """robo_sumo.r1_motor.run(300)
+    robo_sumo.l1_motor.run(300)"""
 
 main()

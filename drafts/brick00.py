@@ -8,6 +8,7 @@ from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
 from time import sleep
 from math import pi
+from random import randint
 
 ev3 = EV3Brick()
 
@@ -33,14 +34,8 @@ class Sumo:
         self.l_motor.run(speed)
         self.r1_motor.run(-speed)
         self.l1_motor.run(-speed)
-
-    def attack(self, speed=450): # Ataque com mais velocidade
-        self.r_motor.run(speed)
-        self.l_motor.run(speed)
-        self.r1_motor.run(-speed)
-        self.l1_motor.run(-speed)
     
-    def dc(self, dc): # Função para testar um novo tipo de ataque
+    def attack(self, dc): # Função para testar um novo tipo de ataque
         self.r_motor.dc(dc)
         self.l_motor.dc(dc)
         self.r1_motor.dc(-dc)
@@ -52,12 +47,6 @@ class Sumo:
         self.r1_motor.hold()
         self.l1_motor.hold()
         sleep(time)
-
-    def brake_motors(self): # The motor stops due to friction, plus the voltage that is generated while the motor is still moving (from official documentation)
-        self.r_motor.brake()
-        self.l_motor.brake()
-        self.r1_motor.brake()
-        self.l1_motor.brake()
 
     def reset_angle(self): # Função para resetar o ângulo dos 4 motores das rodas
         self.l_motor.reset_angle(0)
@@ -113,12 +102,12 @@ class Sumo:
         if HOLD:
             self.hold_motors()
 
-    def detect_object(sensor, threshold=100):
-        return sensor.distance() < threshold # Retornar um Booleano
-        
-    def detect_color(sensor):
-        return sensor.color() == Color.WHITE
+    def detect_object(self, sensor, threshold=100): # Função para retornar um booleano se detectou algo nessa distância
+        return sensor.distance() < threshold
 
+    def detect_color(self, sensor): # Função para retornar um booleano que diz se a cor identificada é branca ou não
+        return sensor.color() == Color.WHITE
+    
 brick00 = Sumo(100, 4.2, 12.8)
 """ Estratégias do brick00 de movimentação"""
 def search(speed, HOLD):
@@ -126,16 +115,67 @@ def search(speed, HOLD):
     sleep(0.3)
     brick00.left_until(speed, HOLD)
 
-def search_star(angle):
-    brick00.right(angle,200)
-    brick00.walk(100)
+def search_incrementation(angle,incrementation, speed): # Ainda não está testada
+    side = randint(0,1)
+    while not brick00.color_sens1() and not brick00.color_sens2():
+        if side:
+            brick00.right(angle,speed)
+            angle = (2*angle) + incrementation
+            side = 0 # Quero forçar para que na próxma entrada do loop ele vire para a esquerda primeiramente
+        else:
+            brick00.left(angle, speed)
+            angle = (2*angle) + incrementation
+            side = 1
+
+def search_star(angle, speed=200):
+    brick00.right(angle,speed)
+    brick00.walk(speed)
     sleep(1.5)
-    brick00.left(angle + 20, 200)
+    brick00.left(angle + 20, speed)
     brick00.walk(100)
     sleep(1.5)
 
+def circle_search():
+    if know_quadrante(know_angle, 1) == "Q4":
+        brick00.right(180,400)
+
+def know_angle(wheels_rotations, curve_radius):
+    brick00_angle = ...
+    return brick00_angle
+
+def know_quadrante(brick00_angle, k):
+    if brick00_angle < k*90:
+        return "Q1"
+    elif brick00_angle > k*90 and brick00_angle < k*180:
+        return "Q2"
+    elif brick00_angle > k*180 and brick00_angle < k*270:
+        return "Q3"
+    elif brick00_angle > k*270 and brick00_angle < k*360:
+        return "Q4"
+    
+def stuck_wheels(): 
+    return True
+        return False
+
+def tangent_attack():
+    if stuck_wheels():
+        brick00.walk(-300)
+        sleep(0.5)
+        brick00.right_until(400,HOLD=False)
+        brick00.attack()
+    if brick00.color_sens1.color == Color.WHITE():
+        brick00.walk(300)
+        sleep(2)
+
+
+def align_sensors(sensor1, sensor2):
+        if sensor1.distance() and not sensor2.distance(): # o que a distance retorna quando não está detectando nada?
+
+        elif sensor2.distance() and not sensor1.distance():
+
+
 def main():
-    THRESHOLD = 100
+    THRESHOLD = 100 # 10cm  
     flag = False
     
     while not flag:  # Espera pelo botão central
@@ -144,7 +184,7 @@ def main():
             if button == Button.CENTER:
                 flag = True
     while True:
-        search_star(45)
+        search_star(45, 300)
 
         
 main()
