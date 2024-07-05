@@ -70,10 +70,10 @@ class Sumo:
     
 
     def loopless_turn(self, power):
-        self.l_motor.run(power)
-        self.r_motor.run(power)
-        self.r1_motor.run(-power)
-        self.l1_motor.run(-power)
+        self.l_motor.dc(power)
+        self.r_motor.dc(power)
+        self.r1_motor.dc(-power)
+        self.l1_motor.dc(-power)
         
 
     def turn(self, angle, speed): # orientation -1 --> esquerda / orientation 1 --> direita
@@ -138,20 +138,37 @@ def search_star(angle, speed=200):
 def main():
     
     THRESHOLD = 500 # em mm
+    ACCEPTABLE_DIFF = 100
 
     wait(1)
 
+    turn_direction = 1
     last_seen = 1
+
     while True:
 
-        brick00.loopless_turn(90*last_seen)
-        brick00.ev3_print(brick00.stopwatch.time(), "\t", brick00.ultra_sens1.distance(),"\t", brick00.ultra_sens2.distance())
+        brick00.loopless_turn(60*turn_direction)
+        brick00.ev3_print(
+            brick00.ultra_sens1.distance(),
+            brick00.ultra_sens2.distance(),
+            "|",
+            brick00.ultra_sens1.distance() - brick00.ultra_sens2.distance(),
+            turn_direction,
+            clear=True
+        )
 
-        if brick00.ultra_sens1.distance() < THRESHOLD:
-            last_seen = 1
-        if brick00.ultra_sens2.distance() < THRESHOLD:
-            last_seen = -1
-        if brick00.ultra_sens1.distance() < THRESHOLD and brick00.ultra_sens2.distance() < THRESHOLD:
-            last_seen = 0
+        if min(brick00.ultra_sens1.distance(), brick00.ultra_sens2.distance()) < THRESHOLD:
+            if abs(brick00.ultra_sens1.distance() - brick00.ultra_sens2.distance()) <= ACCEPTABLE_DIFF:
+                turn_direction = 0
+                brick00.brick.light.on(Color.GREEN)
+            elif brick00.ultra_sens1.distance() < brick00.ultra_sens2.distance():
+                turn_direction = last_seen = 1
+                brick00.brick.light.on(Color.RED)
+            else:
+                turn_direction = last_seen = -1
+                brick00.brick.light.on(Color.ORANGE)
+        else:
+            turn_direction = last_seen
+
 
 main()
