@@ -19,7 +19,7 @@ GRAPHS_DIRECTORY = "graphs"
 FILENAME = sys.argv[1]
 print(f"GENERATING GRAPH FOR {FILENAME}")
 
-if sys.argv[2] != "-y":
+if len(sys.argv) <= 2 or sys.argv[2] != "-y":
     input("Press any key to continue...")
 
 with open(FILENAME) as file:

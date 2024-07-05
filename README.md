@@ -23,3 +23,12 @@ No exemplo, enviando todos os arquivos da pasta `src` e da pasta `drafts`:
   "ev3devBrowser.download.include": "{src/**,drafts/**}"
 }
 ```
+
+
+## Comandos úteis
+
+### Plotar gráficos com o script `./utils/ploter.py`
+
+```
+python3 ./utils/ploter.py ./logs/{NOME DO ARQUIVO CSV}
+```
