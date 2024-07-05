@@ -1,7 +1,5 @@
 #!/usr/bin/env pybricks-micropython
 from math import pi
-from random import randint
-from time import sleep
 
 from pybricks.ev3devices import (
     ColorSensor,
@@ -30,8 +28,8 @@ class Sumo:
         self.l_motor = Motor(Port.B) # Motor Traseiro Esquerdo
         self.r1_motor = Motor(Port.D) # Motor Traseiro Direito
         self.l1_motor = Motor(Port.C) # Motor Frontal Esquerdo
-        self.ultra_right = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal direito
-        self.ultra_left = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
+        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal direito
+        self.ultra_sens2 = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
         self.color_sens3 = ColorSensor(Port.S3) # Sensor de cor traseiro
 
     def ev3_print(self, *args, clear=False, **kwargs):
@@ -91,7 +89,7 @@ class Sumo:
 
     def turn_until_presence(self,speed, THRESHOLD):  # orientation -1 --> esquerda / orientation 1 --> direita
         self.reset_angle()
-        while self.ultra_right.distance() > THRESHOLD and self.ultra_left.distance() > THRESHOLD:
+        while self.ultra_sens1.distance() > THRESHOLD and self.ultra_sens2.distance() > THRESHOLD:
             self.loopless_turn(speed)
         
 
@@ -105,78 +103,25 @@ class Sumo:
 
 brick00 = Sumo(4.2, 12.8)
 
-def search(speed):
-    side = randint(0,1)
-    if side:
-        brick00.turn_until_presence(speed,1)
-    else:
-        brick00.turn_until_presence(speed, -1)
+
+def main(): # para testar a entrada e saída dele do tapete
+    while brick00.color_sens3.color != Color.WHITE:
+        brick00.walk(500)
     
+    wheel_lenght = 2*pi*((brick00.wheel_diameter)/2) 
+    times = 5/wheel_lenght
+    brick00.r_motor.run_angle(-500, times*360, then=Stop.HOLD, wait=False)
+    brick00.l_motor.run_angle(500, times*360, then=Stop.HOLD, wait=False)
+    brick00.r1_motor.run_angle(500, times*360, then=Stop.HOLD, wait=False)
+    brick00.l1_motor.run_angle(-500, times*360, then=Stop.HOLD, wait=True)
 
-def search_incrementation(angle,incrementation, speed): # Ainda não está testada
-    side = randint(0,1)
-    while not brick00.ultra_right.distance() and not brick00.ultra_left.distance():
-        if side:
-            brick00.right(angle,speed)
-            angle = (2*angle) + incrementation
-            side = 0 
-        else:
-            brick00.left(angle, speed)
-            angle = (2*angle) + incrementation
-            side = 1
+    while brick00.color_sens3.color != Color.BLACK:
+        brick00.walk(-500)
 
-
-def search_star(angle, speed=200):
-    brick00.right(angle,speed)
-    brick00.walk(speed)
-    sleep(1.5)
-    brick00.left(angle + 20, speed)
-    brick00.walk(100)
-    sleep(1.5)
-
-
-def main():
-
-    logger = DataLog("time", "us_right", "us_left", name="us_finder")
-    
-    THRESHOLD = 500 # em mm
-    ACCEPTABLE_DIFF = 100
-
-    flag = 0
-    while not flag:
-        for button in brick00.brick.buttons.pressed():
-            print(button)
-            if button == Button.CENTER:
-                flag = 1
-    sleep(5)
-    turn_direction = 1
-    last_seen = 1
-
-    while True:
-
-        brick00.loopless_turn(60*turn_direction)
-        logger.log(brick00.stopwatch.time(), brick00.ultra_right.distance(), brick00.ultra_left.distance())
-        brick00.ev3_print(
-            brick00.ultra_right.distance(),
-            brick00.ultra_left.distance(),
-            "|",
-            brick00.ultra_right.distance() - brick00.ultra_left.distance(),
-            turn_direction,
-            clear=True
-        )
-
-        if min(brick00.ultra_right.distance(), brick00.ultra_left.distance()) < THRESHOLD:
-            if abs(brick00.ultra_right.distance() - brick00.ultra_left.distance()) <= ACCEPTABLE_DIFF:
-                turn_direction = 0
-                brick00.brick.light.on(Color.GREEN)
-            elif brick00.ultra_right.distance() < brick00.ultra_left.distance():
-                turn_direction = last_seen = 1
-                brick00.brick.light.on(Color.RED)
-            else:
-                turn_direction = last_seen = -1
-                brick00.brick.light.on(Color.ORANGE)
-        else:
-            turn_direction = last_seen
-
+    times2 = 5/wheel_lenght
+    brick00.r_motor.run_angle(-500, times2*360, then=Stop.HOLD, wait=False)
+    brick00.l_motor.run_angle(500, times2*360, then=Stop.HOLD, wait=False)
+    brick00.r1_motor.run_angle(500, times2*360, then=Stop.HOLD, wait=False)
+    brick00.l1_motor.run_angle(-500, times2*360, then=Stop.HOLD, wait=True)
 
 main()
