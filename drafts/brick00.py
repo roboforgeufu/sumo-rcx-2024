@@ -140,8 +140,13 @@ def main():
     THRESHOLD = 500 # em mm
     ACCEPTABLE_DIFF = 100
 
-    wait(1)
-
+    flag = 0
+    while not flag:
+        for button in brick00.brick.buttons.pressed():
+            print(button)
+            if button == Button.CENTER:
+                flag = 1
+    sleep(5)
     turn_direction = 1
     last_seen = 1
 
