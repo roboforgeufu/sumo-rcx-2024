@@ -1,0 +1,2 @@
+matplotlib==3.9.1
+pybricks==3.5.0
