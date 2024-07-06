@@ -15,82 +15,91 @@ from pybricks.parameters import Button, Color, Direction, Port, Stop
 from pybricks.robotics import DriveBase
 from pybricks.tools import DataLog, StopWatch, wait
 
-WHEEL_DIAMETER = 5.5
-WHEEL_DISTANCE = 11.5
 
-ev3 = EV3Brick()
-stopwatch = StopWatch()
-ev3.speaker.beep()
+class Sumo:
+    def __init__(self, wheel_diameter, wheel_distance):
+        self.ev3 = EV3Brick()
+        self.stopwatch = StopWatch()
+        self.motor_back_right = Motor(Port.A)
+        self.motor_back_left = Motor(Port.B)
+        self.motor_front_right = Motor(Port.C)
+        self.motor_front_left = Motor(Port.D)
+        self.color_front = ColorSensor(Port.S1)
+        self.ultra_front = UltrasonicSensor(Port.S2)
+        self.wheel_diameter = wheel_diameter
+        self.wheel_distance = wheel_distance
 
-motor_back_right = Motor(Port.A)
-motor_back_left = Motor(Port.B)
-motor_front_right = Motor(Port.C)
-motor_front_left = Motor(Port.D)
-color_front = ColorSensor(Port.S1)
-ultra_front = UltrasonicSensor(Port.S2)
+    def ev3_print(self, *args, clear=False, **kwargs):
+        if clear:
+            wait(10)
+            self.brick.screen.clear()
+        self.brick.screen.print(*args, **kwargs)
+        print(*args, **kwargs)
+
+    def wait_button_pressed(self, target_button=Button.CENTER):
+        self.ev3.speaker.beep()
+        while True:
+            for button in self.ev3.buttons.pressed():
+                if button == target_button:
+                    break
+
+    def walk(self, speed=100):
+        self.motor_back_right.dc(speed)
+        self.synku.motor_front_left.dc(-speed)
+        self.motor_back_left.dc(speed)
+        self.motor_front_right.dc(-speed)
+
+    def hold_motors(self):
+        self.motor_back_right.hold()
+        self.motor_front_left.hold()
+        self.motor_back_left.hold()
+        self.motor_front_right.hold()
+
+    def brake_motors(self):
+        self.motor_back_right.brake()
+        self.motor_front_left.brake()
+        self.motor_back_left.brake()
+        self.motor_front_right.brake()
+
+    def turn(self, speed=35):
+        self.motor_back_right.dc(-speed)
+        self.motor_front_left.dc(-speed)
+        self.motor_back_left.dc(speed)
+        self.motor_front_right.dc(speed)
 
 
-def walk(speed = 100):
-    motor_back_right.dc(speed)
-    motor_front_left.dc(-speed)
-    motor_back_left.dc(speed)
-    motor_front_right.dc(-speed)
+VIEW_DISTANCE = 500
 
-
-def hold_motors():
-    motor_back_right.hold()
-    motor_front_left.hold()
-    motor_back_left.hold()
-    motor_front_right.hold()
-   
-def brake_motors():
-    motor_back_right.brake()
-    motor_front_left.brake()
-    motor_back_left.brake()
-    motor_front_right.brake()
-
-
-def scan(speed = 35):
-    #print(speed)
-    motor_back_right.dc(-speed)
-    motor_front_left.dc(-speed)
-    motor_back_left.dc(speed)
-    motor_front_right.dc(speed)
-    
 
 def main():
-    robot_distance = 500
-    flag = 0
-    stopwatch.reset()
-    while not flag:
-        for button in ev3.buttons.pressed():
-            print(button)
-            if button == Button.CENTER:
-                flag = 1
+    synku = Sumo(wheel_diameter=5.5, wheel_distance=11.5)
+
     # sleep(5)
     while True:
-        distance = ultra_front.distance()
-        if distance < robot_distance:
-            while(color_front.color() != Color.WHITE and distance < robot_distance):
-                print(ultra_front.distance())
+        distance = synku.ultra_front.distance()
+        if distance < VIEW_DISTANCE:
+            while synku.color_front.color() != Color.WHITE and distance < VIEW_DISTANCE:
                 previous_distance = distance
-                if distance != 2550 and ultra_front.distance() < 10*previous_distance: 
-                    distance = ultra_front.distance()
-                walk()
-            if(color_front.color() == Color.WHITE):
-                brake_motors()
-                walk(speed = -80)
+                if (
+                    distance != 2550
+                    and synku.ultra_front.distance() < 10 * previous_distance
+                ):
+                    distance = synku.ultra_front.distance()
+                synku.walk()
+            if synku.color_front.color() == Color.WHITE:
+                synku.brake_motors()
+                synku.walk(speed=-80)
                 sleep(1.5)
-            hold_motors()
         else:
-            while(distance > robot_distance):
-                distance = ultra_front.distance()
-                if stopwatch.time() > 2000:
-                    scan(-35)
-                    if stopwatch.time() > 4000:
-                        stopwatch.reset()
+            while distance > VIEW_DISTANCE:
+                distance = synku.ultra_front.distance()
+                if synku.stopwatch.time() > 2000:
+                    synku.turn(-35)
+                    if synku.stopwatch.time() > 4000:
+                        synku.stopwatch.reset()
                 else:
-                    scan()
-            hold_motors()
+                    synku.turn()
+        synku.hold_motors()
+
 
 main()
