@@ -98,7 +98,7 @@ class Sumo:
     def detect_object(self, sensor, threshold=400):
         return sensor.distance() < threshold
     
-    
+
 brick00 = Sumo(4.2, 12.8)
 
 def search(speed):
@@ -108,34 +108,22 @@ def search(speed):
     else:
         brick00.turn_until_presence(speed, -1)
     
+def bool_infrared(sensor):
+    THRESHOLD = 50 # %
+    if sensor.distance() < THRESHOLD:
+        return True
+    return False
 
-def search_incrementation(angle,incrementation, speed): # Ainda não está testada
-    side = randint(0,1)
-    while not brick00.ultra_right.distance() and not brick00.ultra_left.distance():
-        if side:
-            brick00.right(angle,speed)
-            angle = (2*angle) + incrementation
-            side = 0 
-        else:
-            brick00.left(angle, speed)
-            angle = (2*angle) + incrementation
-            side = 1
-
-
-def search_star(angle, speed=200):
-    brick00.right(angle,speed)
-    brick00.walk(speed)
-    sleep(1.5)
-    brick00.left(angle + 20, speed)
-    brick00.walk(100)
-    sleep(1.5)
-
+def bool_ultrassonic(sensor):
+    THRESHOLD = 500 # em mm
+    if (sensor.distance() == 2550 and bool_infrared()) or sensor.distance() < THRESHOLD:
+        return True
+    return False
+    
 
 def main():
-
-    logger = DataLog("time", "us_right", "us_left", name="us_finder")
     
-    THRESHOLD = 90 # em mm
+    THRESHOLD = 500 # em mm
     ACCEPTABLE_DIFF = 10 # em mm
     WALK_SPEED = 90
     TURN_SPEED = 90
@@ -147,6 +135,7 @@ def main():
             if button == Button.CENTER:
                 flag = 1
     sleep(1) # lembrar de mudar para 5s
+    
     turn_direction = 1
     last_seen = 1
 
@@ -159,17 +148,16 @@ def main():
             
             brick00.ev3_print(brick00.right_infra_sens.distance(), brick00.left_infra_sens.distance(), clear=True)
 
-            if min(brick00.right_infra_sens.distance(), brick00.left_infra_sens.distance()) < THRESHOLD:
-                if abs(brick00.right_infra_sens.distance() - brick00.left_infra_sens.distance()) <= ACCEPTABLE_DIFF:
+            if bool_infrared() and bool_ultrassonic():
                     turn_direction = 0
                     brick00.brick.light.on(Color.GREEN)
-                elif brick00.right_infra_sens.distance() < brick00.left_infra_sens.distance():
-                    turn_direction = last_seen = 1
-                    brick00.brick.light.on(Color.RED)
-                else:
-                    turn_direction = last_seen = -1
-                    brick00.brick.light.on(Color.ORANGE)
+            elif brick00.right_infra_sens.distance() < brick00.left_infra_sens.distance():
+                turn_direction = last_seen = 1
+                brick00.brick.light.on(Color.RED)
             else:
+                turn_direction = last_seen = -1
+                brick00.brick.light.on(Color.ORANGE)
+        else:
                 turn_direction = last_seen
         brick00.attack(-WALK_SPEED)
         wait(500)
