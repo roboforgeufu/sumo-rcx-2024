@@ -26,13 +26,14 @@ class Sumo:
         self.wheel_diameter = wheel_diameter
         self.wheel_length = wheel_diameter * pi
         self.wheel_distance = wheel_distance
-        self.r_motor = Motor(Port.A) # Motor Frontal Direito
-        self.l_motor = Motor(Port.B) # Motor Traseiro Esquerdo
-        self.r1_motor = Motor(Port.D) # Motor Traseiro Direito
-        self.l1_motor = Motor(Port.C) # Motor Frontal Esquerdo
-        self.ultra_right = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal direito
-        self.ultra_left = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
+        self.front_right_motor = Motor(Port.A) 
+        self.back_left_motor = Motor(Port.B) 
+        self.front_left_motor = Motor(Port.D) 
+        self.back_right_motor = Motor(Port.C) 
+        self.ultra_sens1 = InfraredSensor(Port.S1) # Sensor ultrassônico frontal direito
+        self.ultra_sens2 = InfraredSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
         self.color_sens3 = ColorSensor(Port.S3) # Sensor de cor traseiro
+        self.color_sens4 = ColorSensor(Port.S4)
 
     def ev3_print(self, *args, clear=False, **kwargs):
         if(clear):
@@ -42,41 +43,44 @@ class Sumo:
         print(*args, **kwargs)
      
     def walk(self, speed=300): # Andar para frente, vale ressaltar que os motores de cada lado estão espelhados
-        self.r_motor.run(speed)
-        self.l_motor.run(speed)
-        self.r1_motor.run(-speed)
-        self.l1_motor.run(-speed)
+        self.front_right_motor.run(-speed)
+        self.back_left_motor.run(speed)
+        self.front_left_motor.run(-speed)
+        self.back_right_motor.run(speed)
 
-    
     def attack(self, dc): # Função de ataque que controla a potência do robô
-        self.r_motor.dc(dc)
-        self.l_motor.dc(dc)
-        self.r1_motor.dc(-dc)
-        self.l1_motor.dc(-dc)
+        self.front_right_motor.dc(-dc)
+        self.back_left_motor.dc(dc)
+        self.front_left_motor.dc(-dc)
+        self.back_right_motor.dc(dc)
 
 
     def hold_motors(self): # Para o motor ativamente e ativamente para no ângulo em questão 
-        self.r_motor.hold()
-        self.l_motor.hold()
-        self.r1_motor.hold()
-        self.l1_motor.hold()
+        self.front_right_motor.run(0)
+        self.back_left_motor.run(0)
+        self.front_left_motor.run(0)
+        self.back_right_motor.run(0)
+        self.front_right_motor.hold()
+        self.back_left_motor.hold()
+        self.front_left_motor.hold()
+        self.back_right_motor.hold()
         
 
     def reset_angle(self): # Função para resetar o ângulo dos 4 motores das rodas
-        self.l_motor.reset_angle(0)
-        self.r_motor.reset_angle(0)
-        self.r1_motor.reset_angle(0)
-        self.l1_motor.reset_angle(0)
+        self.back_left_motor.reset_angle(0)
+        self.front_right_motor.reset_angle(0)
+        self.front_left_motor.reset_angle(0)
+        self.back_right_motor.reset_angle(0)
     
 
     def loopless_turn(self, power):
-        self.l_motor.dc(power)
-        self.r_motor.dc(power)
-        self.r1_motor.dc(-power)
-        self.l1_motor.dc(-power)
+        self.back_left_motor.dc(power)
+        self.front_right_motor.dc(power)
+        self.front_left_motor.dc(-power)
+        self.back_right_motor.dc(-power)
         
 
-    def turn(self, angle, speed): # orientation -1 --> esquerda / orientation 1 --> direita
+    def turn(self, angle, speed): 
         signal = angle/abs(angle)
         self.reset_angle()
         media_motor = 0
@@ -84,25 +88,21 @@ class Sumo:
         
         while media_motor < graus_motor:
             self.loopless_turn(speed)
-            media_motor = signal*(self.l_motor.angle() - self.l1_motor.angle()) - signal*(self.r_motor.angle() - self.r1_motor.angle()) / 2
+            media_motor = signal*(self.back_left_motor.angle() - self.back_right_motor.angle()) - signal*(self.front_right_motor.angle() - self.front_left_motor.angle()) / 2
         
         self.hold_motors()
 
 
-    def turn_until_presence(self,speed, THRESHOLD):  # orientation -1 --> esquerda / orientation 1 --> direita
+    def turn_until_presence(self,speed, THRESHOLD): 
         self.reset_angle()
         while self.ultra_right.distance() > THRESHOLD and self.ultra_left.distance() > THRESHOLD:
             self.loopless_turn(speed)
         
 
-    def detect_object(self, sensor, threshold=400): # Função para retornar um booleano se detectou algo nessa distância
+    def detect_object(self, sensor, threshold=400):
         return sensor.distance() < threshold
-
-
-    def detect_color(self, sensor): # Função para retornar um booleano que diz se a cor identificada é branca ou não
-        return sensor.color() == Color.WHITE
     
-
+    
 brick00 = Sumo(4.2, 12.8)
 
 def search(speed):
@@ -139,8 +139,10 @@ def main():
 
     logger = DataLog("time", "us_right", "us_left", name="us_finder")
     
-    THRESHOLD = 500 # em mm
-    ACCEPTABLE_DIFF = 100
+    THRESHOLD = 90 # em mm
+    ACCEPTABLE_DIFF = 10 # em mm
+    WALK_SPEED = 90
+    TURN_SPEED = 90
 
     flag = 0
     while not flag:
@@ -148,35 +150,34 @@ def main():
             print(button)
             if button == Button.CENTER:
                 flag = 1
-    sleep(5)
+    sleep(1) # lembrar de mudar para 5s
     turn_direction = 1
     last_seen = 1
 
     while True:
-
-        brick00.loopless_turn(60*turn_direction)
-        logger.log(brick00.stopwatch.time(), brick00.ultra_right.distance(), brick00.ultra_left.distance())
-        brick00.ev3_print(
-            brick00.ultra_right.distance(),
-            brick00.ultra_left.distance(),
-            "|",
-            brick00.ultra_right.distance() - brick00.ultra_left.distance(),
-            turn_direction,
-            clear=True
-        )
-
-        if min(brick00.ultra_right.distance(), brick00.ultra_left.distance()) < THRESHOLD:
-            if abs(brick00.ultra_right.distance() - brick00.ultra_left.distance()) <= ACCEPTABLE_DIFF:
-                turn_direction = 0
-                brick00.brick.light.on(Color.GREEN)
-            elif brick00.ultra_right.distance() < brick00.ultra_left.distance():
-                turn_direction = last_seen = 1
-                brick00.brick.light.on(Color.RED)
+        while brick00.color_sens4.reflection() < 30:
+            if turn_direction == 0:
+                brick00.attack(WALK_SPEED)
             else:
-                turn_direction = last_seen = -1
-                brick00.brick.light.on(Color.ORANGE)
-        else:
-            turn_direction = last_seen
+                brick00.loopless_turn(TURN_SPEED*turn_direction)
+            
+            brick00.ev3_print(brick00.ultra_sens1.distance(), brick00.ultra_sens2.distance(), clear=True)
 
+            if min(brick00.ultra_sens1.distance(), brick00.ultra_sens2.distance()) < THRESHOLD:
+                if abs(brick00.ultra_sens1.distance() - brick00.ultra_sens2.distance()) <= ACCEPTABLE_DIFF:
+                    turn_direction = 0
+                    brick00.brick.light.on(Color.GREEN)
+                elif brick00.ultra_sens1.distance() < brick00.ultra_sens2.distance():
+                    turn_direction = last_seen = 1
+                    brick00.brick.light.on(Color.RED)
+                else:
+                    turn_direction = last_seen = -1
+                    brick00.brick.light.on(Color.ORANGE)
+            else:
+                turn_direction = last_seen
+        brick00.attack(-WALK_SPEED)
+        wait(500)
+        brick00.loopless_turn(TURN_SPEED)
+        wait(500)
 
 main()
