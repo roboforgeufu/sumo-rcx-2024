@@ -62,6 +62,13 @@ class Sumo:
             self.ev3.screen.print(*args, **kwargs)
             print(*args, **kwargs)
 
+    def wait_button_pressed(self, target_button=Button.CENTER):
+        self.ev3.speaker.beep()
+        while True:
+            for button in self.ev3.buttons.pressed():
+                if button == target_button:
+                    break
+
     def walk(self, speed=100, speed_left=None, speed_right=None):
         if speed_left is None:
             speed_left = speed

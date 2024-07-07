@@ -15,13 +15,11 @@ from pybricks.tools import DataLog, StopWatch, wait
 
 
 def ir_read_to_mm(percentage):
-    # https://www.youtube.com/watch?v=kAh2cYn_seI
-    if percentage <= 43:
-        distance = -0.002 * percentage**2 + 0.3982 * percentage + 1.6040
-    else:
-        distance = 0.0177 * percentage**2 - 0.9 * percentage + 32.045
-
-    return distance * 10
+    # Parábola obtida através da interpolação dos pontos (https://www.geogebra.org/m/qPAebsAc)
+    # 0, 40
+    # 50, 440
+    # 100, 1200
+    return (9 / 125) * percentage**2 + (22 / 5) * percentage + 40
 
 
 ev3 = EV3Brick()
@@ -29,11 +27,11 @@ us = UltrasonicSensor(Port.S2)
 ir = InfraredSensor(Port.S1)
 stopwatch = StopWatch()
 
-logger = DataLog("time", "ir", "us", name="ir_us")
+# logger = DataLog("us", "ir", name="ir_us")
 
 # 100% IR == 65 cm, mais ou menos
 while True:
-    logger.log(stopwatch.time(), ir.distance(), us.distance())
+    # logger.log(us.distance(), ir_read_to_mm(ir.distance()))
     print(
         us.distance(),
         ir_read_to_mm(ir.distance()),

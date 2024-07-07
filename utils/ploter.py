@@ -27,30 +27,31 @@ with open(FILENAME) as file:
 
 
 headers = True
-x_data = [] # lista com valores pro eixo horizontal
-ys_data = [] # lista de listas de valores para cada uma das linhas do eixo vertical
+x_data = []  # lista com valores pro eixo horizontal
+ys_data = []  # lista de listas de valores para cada uma das linhas do eixo vertical
 
 headers = data[0]
 
-for row in data[1:]: # skip headers
+for row in data[1:]:  # skip headers
     x_data.append(float(row[0]))
 
     for index, row_data in enumerate(row[1:]):
         if len(ys_data) < len(row) - 1:
             # povoamento inicial de cada uma das listas de valores (p/ cada uma das colunas)
             ys_data.append([])
-        
+
         ys_data[index].append(float(row_data))
 
 
-plt.figure(figsize=(15,6))
-for y_data in ys_data:
-    plt.plot(x_data, y_data)
+plt.figure(figsize=(15, 6))
+for i, y_data in enumerate(ys_data):
+    plt.plot(x_data, y_data, label=headers[i + 1])
 plt.grid()
+plt.legend(loc="upper left")
 
 
-FILENAME = FILENAME.split("/")[-1] # pega a última parte do nome do arquivo
+FILENAME = FILENAME.split("/")[-1]  # pega a última parte do nome do arquivo
 
 plt.title(FILENAME)
 print(f"Saving to {GRAPHS_DIRECTORY}/{FILENAME}.png")
-plt.savefig(f"{GRAPHS_DIRECTORY}/{FILENAME}.png", bbox_inches='tight')
+plt.savefig(f"{GRAPHS_DIRECTORY}/{FILENAME}.png", bbox_inches="tight")
