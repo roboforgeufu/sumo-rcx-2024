@@ -24,11 +24,18 @@ No exemplo, enviando todos os arquivos da pasta `src` e da pasta `drafts`:
 }
 ```
 
-
 ## Comandos úteis
 
 ### Plotar gráficos com o script `./utils/ploter.py`
 
+No linux:
+
 ```
 python3 ./utils/ploter.py ./logs/{NOME DO ARQUIVO CSV}
+```
+
+No windows:
+
+```
+python3 .\utils\ploter.py .\logs\{NOME DO ARQUIVO CSV}
 ```
