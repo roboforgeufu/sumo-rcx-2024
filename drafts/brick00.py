@@ -26,14 +26,14 @@ class Sumo:
         self.wheel_diameter = wheel_diameter
         self.wheel_length = wheel_diameter * pi
         self.wheel_distance = wheel_distance
-        self.front_right_motor = Motor(Port.A) 
-        self.back_left_motor = Motor(Port.B) 
-        self.front_left_motor = Motor(Port.D) 
-        self.back_right_motor = Motor(Port.C) 
-        self.ultra_sens1 = InfraredSensor(Port.S1) # Sensor ultrassônico frontal direito
-        self.ultra_sens2 = InfraredSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
-        self.color_sens3 = ColorSensor(Port.S3) # Sensor de cor traseiro
-        self.color_sens4 = ColorSensor(Port.S4)
+        self.front_right_motor = Motor(Port.A) # Motor Frontal Direito
+        self.back_left_motor = Motor(Port.B) # Motor Traseiro Esquerdo
+        self.front_left_motor = Motor(Port.D) # Motor Frontal Esquerdo
+        self.back_right_motor = Motor(Port.C) # Motor Traseiro Direito
+        self.right_infra_sens = InfraredSensor(Port.S1) # Sensor ultrassônico frontal direito
+        self.left_infra_sens = InfraredSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
+        self.back_color_sens = ColorSensor(Port.S3) # Sensor de cor traseiro
+        self.front_color_sens = ColorSensor(Port.S4) # Sensor de cor frontal
 
     def ev3_print(self, *args, clear=False, **kwargs):
         if(clear):
@@ -54,7 +54,6 @@ class Sumo:
         self.front_left_motor.dc(-dc)
         self.back_right_motor.dc(dc)
 
-
     def hold_motors(self): # Para o motor ativamente e ativamente para no ângulo em questão 
         self.front_right_motor.run(0)
         self.back_left_motor.run(0)
@@ -65,21 +64,18 @@ class Sumo:
         self.front_left_motor.hold()
         self.back_right_motor.hold()
         
-
     def reset_angle(self): # Função para resetar o ângulo dos 4 motores das rodas
         self.back_left_motor.reset_angle(0)
         self.front_right_motor.reset_angle(0)
         self.front_left_motor.reset_angle(0)
         self.back_right_motor.reset_angle(0)
     
-
     def loopless_turn(self, power):
         self.back_left_motor.dc(power)
         self.front_right_motor.dc(power)
         self.front_left_motor.dc(-power)
         self.back_right_motor.dc(-power)
         
-
     def turn(self, angle, speed): 
         signal = angle/abs(angle)
         self.reset_angle()
@@ -155,19 +151,19 @@ def main():
     last_seen = 1
 
     while True:
-        while brick00.color_sens4.reflection() < 30:
+        while brick00.front_color_sens.reflection() < 30:
             if turn_direction == 0:
                 brick00.attack(WALK_SPEED)
             else:
                 brick00.loopless_turn(TURN_SPEED*turn_direction)
             
-            brick00.ev3_print(brick00.ultra_sens1.distance(), brick00.ultra_sens2.distance(), clear=True)
+            brick00.ev3_print(brick00.right_infra_sens.distance(), brick00.left_infra_sens.distance(), clear=True)
 
-            if min(brick00.ultra_sens1.distance(), brick00.ultra_sens2.distance()) < THRESHOLD:
-                if abs(brick00.ultra_sens1.distance() - brick00.ultra_sens2.distance()) <= ACCEPTABLE_DIFF:
+            if min(brick00.right_infra_sens.distance(), brick00.left_infra_sens.distance()) < THRESHOLD:
+                if abs(brick00.right_infra_sens.distance() - brick00.left_infra_sens.distance()) <= ACCEPTABLE_DIFF:
                     turn_direction = 0
                     brick00.brick.light.on(Color.GREEN)
-                elif brick00.ultra_sens1.distance() < brick00.ultra_sens2.distance():
+                elif brick00.right_infra_sens.distance() < brick00.left_infra_sens.distance():
                     turn_direction = last_seen = 1
                     brick00.brick.light.on(Color.RED)
                 else:
