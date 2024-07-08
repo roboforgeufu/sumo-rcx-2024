@@ -37,6 +37,8 @@ def main():
     WALK_SPEED = 90
     TURN_SPEED = 50
 
+    wait(5)
+
     while True:
         while zerodois.is_floor():
             if zerodois.us_middle.distance() < VIEW_DISTANCE:

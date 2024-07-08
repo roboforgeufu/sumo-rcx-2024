@@ -49,6 +49,8 @@ def main():
     WALK_SPEED = 90
     TURN_SPEED = 90
 
+    wait(5)
+
     turn_direction = 1
     last_seen = 1
     while True:
