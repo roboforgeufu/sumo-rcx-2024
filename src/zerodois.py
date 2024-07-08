@@ -25,71 +25,43 @@ def main():
         left_motor_output=Port.D,
         right_back_motor_output=Port.C,
         left_back_motor_output=Port.B,
-        floor_sensor_output=Port.S4,
+        floor_sensor_output=Port.S1,
         outside_floor_reflection=8,
         sensors=[
-            ("us_right", InfraredSensor(Port.S2)),
-            ("us_left", UltrasonicSensor(Port.S3)),
-            ("back_floor", ColorSensor(Port.S1)),
-            ("us_middle", ColorSensor(Port.S4)),
+            ("us_right", UltrasonicSensor(Port.S3)),
+            ("us_left", UltrasonicSensor(Port.S4)),
+            ("us_middle", UltrasonicSensor(Port.S2)),
         ],
     )
     VIEW_DISTANCE = 500
+    WALK_SPEED = 90
+    TURN_SPEED = 50
+
     while True:
-
-        middle_distance = zerodois.us_middle.distance()
-        left_distance = zerodois.us_left.distance()
-        right_distance = zerodois.us_right.distance()
-
-        if (
-            middle_distance < VIEW_DISTANCE
-            or left_distance < VIEW_DISTANCE
-            or right_distance < VIEW_DISTANCE
-        ):
-            while zerodois.is_floor() and (
-                middle_distance < VIEW_DISTANCE
-                or left_distance < VIEW_DISTANCE
-                or right_distance < VIEW_DISTANCE
-            ):
-                previous_distance = middle_distance
-
-                if (
-                    middle_distance != 2550
-                    and zerodois.us_middle_distance() < 10 * previous_distance
-                ):
-                    middle_distance = zerodois.us_middle_distance()
-
-                if left_distance < VIEW_DISTANCE:
-                    while not middle_distance < VIEW_DISTANCE:
-                        zerodois.turn(-35)
-                elif right_distance < VIEW_DISTANCE:
-                    while not middle_distance < VIEW_DISTANCE:
-                        zerodois.turn()
-                zerodois.walk()
-            if not zerodois.is_floor():
-                zerodois.brake_motors()
-                zerodois.walk_backwards(speed=-80, time=1500)
-        else:
-            while middle_distance > VIEW_DISTANCE:
-                middle_distance = zerodois.us_middle_distance()
-                left_distance = zerodois.us_left_distance()
-                right_distance = zerodois.us_right_distance()
-
-                if left_distance < 2550:
-                    while not middle_distance < VIEW_DISTANCE:
-                        zerodois.turn(50)
-
-                elif right_distance < 2550:
-                    while not middle_distance < VIEW_DISTANCE:
-                        zerodois.turn(50)
-
+        while zerodois.is_floor():
+            if zerodois.us_middle.distance() < VIEW_DISTANCE:
+                zerodois.ev3.light.on(Color.GREEN)
+                zerodois.walk(WALK_SPEED)
+            elif zerodois.us_left.distance() < VIEW_DISTANCE:
+                zerodois.ev3.light.on(Color.YELLOW)
+                zerodois.turn(-TURN_SPEED)
+            elif zerodois.us_right.distance() < VIEW_DISTANCE:
+                zerodois.ev3.light.on(Color.RED)
+                zerodois.turn(TURN_SPEED)
+            else:
+                # rotina de busca
+                zerodois.ev3.light.off()
                 if zerodois.stopwatch.time() > 2000:
-                    zerodois.turn(-35)
+                    zerodois.turn(-TURN_SPEED)
                     if zerodois.stopwatch.time() > 4000:
                         zerodois.stopwatch.reset()
                 else:
-                    zerodois.turn()
-        zerodois.hold_motors()
+                    zerodois.turn(TURN_SPEED)
+
+        zerodois.walk(-WALK_SPEED)
+        wait(500)
+        zerodois.turn(TURN_SPEED)
+        wait(500)
 
 
 main()
