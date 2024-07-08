@@ -30,6 +30,7 @@ class Sumo:
         floor_sensor_output,
         debug=True,
         sensors=[],
+        other_motors=[],
         outside_floor_reflection=50,
     ):
         """
@@ -40,10 +41,13 @@ class Sumo:
         self.wheel_diameter = wheel_diameter
         self.wheel_distance = wheel_distance
 
-        # Motores
+        # Motores principais
         self.right_motor = Motor(right_motor_output)
         self.left_motor = Motor(left_motor_output)
         self.debug = debug
+
+        # Motores secundários
+        self.other_motors = {m_name: m_obj for m_name, m_obj in other_motors}
 
         self.outside_floor_reflection = outside_floor_reflection
 
@@ -76,7 +80,7 @@ class Sumo:
             speed_right = speed
 
         self.left_motor.dc(speed_left)
-        self.right_motor_motor.dc(speed_right)
+        self.right_motor.dc(speed_right)
 
     def hold_motors(self):
         self.left_motor.hold()
@@ -91,8 +95,11 @@ class Sumo:
         self.right_motor.dc(-speed)
 
     def __getattr__(self, name: str):
-        """Tratativa pra acesso simplificado aos sensores"""
-        return self.sensors.get(name, None)
+        """Tratativa pra acesso simplificado aos sensores e motores secundários"""
+        sensor = self.sensors.get(name, None)
+        if sensor is None:
+            return self.other_motors.get(name, None)
+        return sensor
 
     def is_floor(self):
         ACCEPTABLE_DIFF = 5
