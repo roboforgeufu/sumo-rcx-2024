@@ -37,7 +37,7 @@ def main():
         right_back_motor_output=Port.C,
         left_back_motor_output=Port.B,
         floor_sensor_output=Port.S4,
-        outside_floor_reflection=8,
+        outside_floor_reflection=60,
         sensors=[
             ("ir_right", InfraredSensor(Port.S1)),
             ("us_left", UltrasonicSensor(Port.S2)),
