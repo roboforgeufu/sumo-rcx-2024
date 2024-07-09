@@ -73,6 +73,9 @@ class Sumo:
                 if button == target_button:
                     break
 
+    def turn_degrees_to_motor_angle(self, degrees):
+        return degrees * (self.wheel_distance / self.wheel_diameter)
+
     def walk(self, speed=100, speed_left=None, speed_right=None):
         if speed_left is None:
             speed_left = speed
@@ -81,6 +84,10 @@ class Sumo:
 
         self.left_motor.dc(speed_left)
         self.right_motor.dc(speed_right)
+
+    def reset_motors(self):
+        self.left_motor.reset_angle(0)
+        self.right_motor.reset_angle(0)
 
     def hold_motors(self):
         self.left_motor.hold()
@@ -161,6 +168,20 @@ class FourWheeledSumo(Sumo):
         self.left_motor.dc(-speed_left)
         self.left_back_motor.dc(speed_left)
         self.right_motor.dc(-speed_right)
+
+    def reset_motors(self):
+        self.right_back_motor.reset_angle(0)
+        self.left_motor.reset_angle(0)
+        self.left_back_motor.reset_angle(0)
+        self.right_motor.reset_angle(0)
+
+    def motor_abs_angle_mean(self):
+        return (
+            abs(self.right_back_motor.angle())
+            + abs(self.right_motor.angle())
+            + abs(self.left_back_motor.angle())
+            + abs(self.left_motor.angle())
+        ) / 4
 
     # override
     def hold_motors(self):
