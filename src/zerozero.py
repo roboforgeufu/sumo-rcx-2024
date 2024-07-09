@@ -19,7 +19,7 @@ from core.utils import ir_read_to_mm
 
 
 def bool_infrared(sensor, threshold):
-    return ir_read_to_mm(sensor.distance()) < (threshold)
+    return ir_read_to_mm(sensor.distance()) < threshold
 
 
 def bool_ultrassonic(us_sensor, ir_sensor, threshold):
@@ -37,7 +37,7 @@ def main():
         right_back_motor_output=Port.C,
         left_back_motor_output=Port.B,
         floor_sensor_output=Port.S4,
-        outside_floor_reflection=65,
+        outside_floor_reflection=8,
         sensors=[
             ("ir_right", InfraredSensor(Port.S1)),
             ("us_left", UltrasonicSensor(Port.S2)),
@@ -49,7 +49,9 @@ def main():
     WALK_SPEED = 90
     TURN_SPEED = 90
 
-    wait(5)
+    INFRARED_TIME_CYCLE = 500
+
+    infrared_seen = 500  # leitura máxima
 
     turn_direction = 1
     last_seen = 1
@@ -68,20 +70,17 @@ def main():
 
             if (
                 min(
-                    ir_read_to_mm(zerozero.ir_right.distance()),
+                    infrared_seen,
                     zerozero.us_left.distance(),
                 )
                 < THRESHOLD
             ):
-                if bool_infrared(zerozero.ir_right, THRESHOLD) and bool_ultrassonic(
+                if infrared_seen < THRESHOLD and bool_ultrassonic(
                     zerozero.us_left, zerozero.ir_right, THRESHOLD
                 ):
                     turn_direction = 0
                     zerozero.ev3.light.on(Color.GREEN)
-                elif (
-                    ir_read_to_mm(zerozero.ir_right.distance())
-                    < zerozero.us_left.distance()
-                ):
+                elif infrared_seen < zerozero.us_left.distance():
                     turn_direction = last_seen = 1
                     zerozero.ev3.light.on(Color.RED)
                 else:
@@ -89,6 +88,17 @@ def main():
                     zerozero.ev3.light.on(Color.ORANGE)
             else:
                 turn_direction = last_seen
+
+            if (
+                bool_infrared(zerozero.ir_right, THRESHOLD)
+                and zerozero.stopwatch.time() < INFRARED_TIME_CYCLE
+            ) or ir_read_to_mm(zerozero.ir_right.distance()) < infrared_seen:
+                infrared_seen = ir_read_to_mm(zerozero.ir_right.distance())
+
+            if zerozero.stopwatch.time() > INFRARED_TIME_CYCLE:
+                zerozero.stopwatch.reset()
+                infrared_seen = ir_read_to_mm(zerozero.ir_right.distance())
+
         zerozero.walk(-WALK_SPEED)
         wait(500)
         zerozero.turn(TURN_SPEED)
