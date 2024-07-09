@@ -1,12 +1,17 @@
 #!/usr/bin/env pybricks-micropython
+from pybricks.ev3devices import (
+    ColorSensor,
+    GyroSensor,
+    InfraredSensor,
+    Motor,
+    TouchSensor,
+    UltrasonicSensor,
+)
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
-                                 InfraredSensor, UltrasonicSensor, GyroSensor)
-from pybricks.parameters import Port, Stop, Direction, Button, Color
-from pybricks.tools import wait, StopWatch, DataLog
+from pybricks.media.ev3dev import ImageFile, SoundFile
+from pybricks.parameters import Button, Color, Direction, Port, Stop
 from pybricks.robotics import DriveBase
-from pybricks.media.ev3dev import SoundFile, ImageFile
-
+from pybricks.tools import DataLog, StopWatch, wait
 
 # This program requires LEGO EV3 MicroPython v2.0 or higher.
 # Click "Open user guide" on the EV3 extension tab for more information.
@@ -30,17 +35,19 @@ motorC = Motor(Port.C)
 # FUNCTIONS
 ev3.speaker.beep()
 
+
 # Abre e fecha as asas
 def wings(direction):
-    
+
     motorA.reset_angle(0)
     motorA.run_until_stalled(800 * direction, Stop.COAST, 50)
     print(motorA.angle())
-    
-    
+
+
 def main():
 
     wings(1)
-    
-#Start
+
+
+# Start
 main()

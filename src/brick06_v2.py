@@ -1,5 +1,7 @@
 #!/usr/bin/env pybricks-micropython
 
+from random import choice
+
 from pybricks.ev3devices import (  # type: ignore
     ColorSensor,
     GyroSensor,
@@ -13,8 +15,6 @@ from pybricks.media.ev3dev import ImageFile, SoundFile  # type: ignore
 from pybricks.parameters import Button, Color, Direction, Port, Stop  # type: ignore
 from pybricks.robotics import DriveBase  # type: ignore
 from pybricks.tools import DataLog, StopWatch, wait  # type: ignore
-
-from random import choice
 
 from core.sumo import Sumo
 
@@ -46,6 +46,7 @@ def reset_angle():
 
     tijolao.left_motor.reset_angle(0)
     tijolao.right_motor.reset_angle(0)
+
 
 # Wings movement
 def wings():
@@ -86,19 +87,21 @@ def ultrasonic_check():
 
     return side
 
+
 def desvio(side, degrees):
-    
+
     reset_angle()
 
     if side == "right":
-        while abs(tijolao.right_motor.angle() - tijolao.left_motor.angle()) <=  degrees:
+        while abs(tijolao.right_motor.angle() - tijolao.left_motor.angle()) <= degrees:
             tijolao.walk(0, -100, -30)
-            print (abs(tijolao.right_motor.angle() + tijolao.left_motor.angle()))
+            print(abs(tijolao.right_motor.angle() + tijolao.left_motor.angle()))
     elif side == "left":
-        while abs(tijolao.left_motor.angle() - tijolao.right_motor.angle()) <=  degrees:
-            tijolao.walk(0, -30, -100)      
+        while abs(tijolao.left_motor.angle() - tijolao.right_motor.angle()) <= degrees:
+            tijolao.walk(0, -30, -100)
 
     tijolao.hold_motors()
+
 
 def main():
 
@@ -157,12 +160,15 @@ def main():
             tijolao.turn(30 * direction)
 
             if last_state == "bait":
-                if tijolao.infra_front.distance() < INFRA_DIST and ultrasonic_check() == "center":
+                if (
+                    tijolao.infra_front.distance() < INFRA_DIST
+                    and ultrasonic_check() == "center"
+                ):
                     state = "atk"
             else:
                 if tijolao.infra_front.distance() < INFRA_DIST:
                     state = "atk"
-                
+
         elif state == "atk":
             tijolao.ev3.light.on(Color.RED)
             if not tijolao.is_floor():
@@ -180,7 +186,9 @@ def main():
             else:
                 tijolao.walk(SPEED)
 
-            if tijolao.infra_front.distance() > INFRA_DIST and (ultrasonic_check() == "left" or ultrasonic_check() == "right"):
+            if tijolao.infra_front.distance() > INFRA_DIST and (
+                ultrasonic_check() == "left" or ultrasonic_check() == "right"
+            ):
                 last_side = ultrasonic_check()
                 state = "bait"
             elif tijolao.infra_front.distance() > INFRA_DIST:
@@ -192,10 +200,10 @@ def main():
             # Fecha a asa
             wing_is_open = False
 
-            desvio (last_side, 400)
-            
-            last_state = "bait"
-            state == "search"
+            desvio(last_side, 400)
 
-            
+            last_state = "bait"
+            state = "search"
+
+
 main()
