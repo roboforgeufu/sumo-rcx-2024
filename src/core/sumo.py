@@ -103,7 +103,19 @@ class Sumo:
 
     def is_floor(self):
         ACCEPTABLE_DIFF = 5
-        return (
+
+        if self.outside_floor_reflection < 30:
+            # O lado de fora é o mais escuro
+            limit_condition = (
+                self.floor_sensor.reflection() > self.outside_floor_reflection
+            )
+        else:
+            # O lado de fora é o mais claro
+            limit_condition = (
+                self.floor_sensor.reflection() < self.outside_floor_reflection
+            )
+
+        return limit_condition or (
             abs(self.floor_sensor.reflection() - self.outside_floor_reflection)
             >= ACCEPTABLE_DIFF
         )
@@ -124,14 +136,14 @@ class FourWheeledSumo(Sumo):
         outside_floor_reflection=50,
     ):
         super().__init__(
-            wheel_diameter,
-            wheel_distance,
-            right_motor_output,
-            left_motor_output,
-            floor_sensor_output,
-            debug,
-            sensors,
-            outside_floor_reflection,
+            wheel_diameter=wheel_diameter,
+            wheel_distance=wheel_distance,
+            right_motor_output=right_motor_output,
+            left_motor_output=left_motor_output,
+            floor_sensor_output=floor_sensor_output,
+            debug=debug,
+            sensors=sensors,
+            outside_floor_reflection=outside_floor_reflection,
         )
 
         # Motores traseiros (secundários)

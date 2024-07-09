@@ -29,7 +29,7 @@ def main():
         sensors=[
             ("ultra_front", UltrasonicSensor(Port.S2)),
         ],
-        outside_floor_reflection=8,
+        outside_floor_reflection=60,
     )
 
     VIEW_DISTANCE = 500
