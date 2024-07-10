@@ -20,7 +20,7 @@ from core.sumo import Sumo
 
 tijolao = Sumo(
     wheel_diameter=5.5,
-    wheel_distance=9.75,
+    wheel_distance=11,
     right_motor_output=Port.B,
     left_motor_output=Port.C,
     floor_sensor_output=Port.S1,
@@ -32,15 +32,20 @@ tijolao = Sumo(
         ("ultra_right", UltrasonicSensor(Port.S3)),
         ("ultra_left", UltrasonicSensor(Port.S4)),
     ],
-    outside_floor_reflection=60,
+    outside_floor_reflection=75,
 )
 
 wing_is_open = False
 SPEED = 100
-WINGS_ANGLE = 850
+WINGS_ANGLE = 800
 ULTRA_DIST = 500
 INFRA_DIST = 90
 
+
+def reset_angle():
+
+    tijolao.left_motor.reset_angle(0)
+    tijolao.right_motor.reset_angle(0)
 
 # Wings movement
 def wings():
@@ -75,12 +80,25 @@ def ultrasonic_check():
         elif tijolao.ultra_right.distance() > tijolao.ultra_left.distance():
             side = "left"
         else:
-            side = "esquece_estorado"
+            side = "none"
     else:
-        side = "esquece_estorado"
+        side = "none"
 
     return side
 
+def desvio(side, degrees):
+    
+    reset_angle()
+
+    if side == "right":
+        while abs(tijolao.right_motor.angle() - tijolao.left_motor.angle()) <=  degrees:
+            tijolao.walk(0, -100, -30)
+            print (abs(tijolao.right_motor.angle() + tijolao.left_motor.angle()))
+    elif side == "left":
+        while abs(tijolao.left_motor.angle() - tijolao.right_motor.angle()) <=  degrees:
+            tijolao.walk(0, -30, -100)      
+
+    tijolao.hold_motors()
 
 def main():
 
@@ -88,7 +106,9 @@ def main():
 
     print(wing_is_open, tijolao.wings_motor.angle())
 
-    state = "search"  # pode ser tbm "atk" ou "return"
+    state = "search"  # pode ser tbm "atk" ou "return" ou "bait"
+    last_state = "search"
+    last_side = "none"
     direction_choice = choice([1, -1])
 
     while True:
@@ -102,14 +122,19 @@ def main():
         #
 
         if state == "return":
-            tijolao.ev3.light.on(Color.GREEN)
+            tijolao.ev3.light.off()
+
+            # Fecha as asas
+            wing_is_open = False
+
             # manobra de retorno
             while not tijolao.is_floor():
                 tijolao.walk(-SPEED)
             wait(500)
             state = "search"
+
         elif state == "search":
-            tijolao.ev3.light.on(Color.YELLOW)
+            tijolao.ev3.light.on(Color.BLUE)
             if not tijolao.is_floor():
                 state = "return"
                 continue
@@ -117,20 +142,27 @@ def main():
             # Abre a asa
             wing_is_open = True
 
-            if ultrasonic_check() == "esquece_estorado":
-                direction = direction_choice
-            elif ultrasonic_check() == "right":
-                direction = -1
-                direction_choice = direction
-            elif ultrasonic_check() == "left":
-                direction = 1
-                direction_choice = direction
+            if ultrasonic_check() == "center":
+                tijolao.walk(30)
+            else:
+                if ultrasonic_check() == "none":
+                    direction = direction_choice
+                elif ultrasonic_check() == "right":
+                    direction = -1
+                    direction_choice = direction
+                elif ultrasonic_check() == "left":
+                    direction = 1
+                    direction_choice = direction
 
             tijolao.turn(30 * direction)
 
-            if tijolao.infra_front.distance() < INFRA_DIST:
-                state = "atk"
-
+            if last_state == "bait":
+                if tijolao.infra_front.distance() < INFRA_DIST and ultrasonic_check() == "center":
+                    state = "atk"
+            else:
+                if tijolao.infra_front.distance() < INFRA_DIST:
+                    state = "atk"
+                
         elif state == "atk":
             tijolao.ev3.light.on(Color.RED)
             if not tijolao.is_floor():
@@ -138,17 +170,32 @@ def main():
                 continue
             direction_choice = choice([1, -1])
 
+            # Abre a asa
+            wing_is_open = True
+
+            if ultrasonic_check() == "left":
+                tijolao.walk(0, SPEED * 0.85, SPEED)
+            elif ultrasonic_check() == "right":
+                tijolao.walk(0, SPEED, SPEED * 0.85)
+            else:
+                tijolao.walk(SPEED)
+
+            if tijolao.infra_front.distance() > INFRA_DIST and (ultrasonic_check() == "left" or ultrasonic_check() == "right"):
+                last_side = ultrasonic_check()
+                state = "bait"
+            elif tijolao.infra_front.distance() > INFRA_DIST:
+                state = "search"
+
+        elif state == "bait":
+            tijolao.ev3.light.on(Color.GREEN)
+
             # Fecha a asa
             wing_is_open = False
 
-            if ultrasonic_check() == "left":
-                tijolao.walk(0, SPEED * 0.9, SPEED)
-            elif ultrasonic_check() == "right":
-                tijolao.walk(0, SPEED, SPEED * 0.9)
-            else:
-                tijolao.walk(SPEED)
-            if tijolao.infra_front.distance() > INFRA_DIST:
-                state = "search"
+            desvio (last_side, 400)
+            
+            last_state = "bait"
+            state == "search"
 
-
+            
 main()
