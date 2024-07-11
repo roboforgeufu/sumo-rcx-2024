@@ -24,14 +24,14 @@ zerodois = FourWheeledSumo(
     right_back_motor_output=Port.C,
     left_back_motor_output=Port.B,
     floor_sensor_output=Port.S1,
-    outside_floor_reflection=60,
+    outside_floor_reflection=50,  # mudou de 60 para 50
     sensors=[
         ("us_right", UltrasonicSensor(Port.S3)),
         ("us_left", UltrasonicSensor(Port.S4)),
         ("us_middle", UltrasonicSensor(Port.S2)),
     ],
 )
-VIEW_DISTANCE = 500
+VIEW_DISTANCE = 400  # mudou de 500 para 400
 WALK_SPEED = 95
 TURN_SPEED = 50
 FAST_TURN_SPEED = 95
@@ -40,6 +40,8 @@ MAX_TURN_DEGREES = 400
 
 
 def main():
+    zerodois.wait_button_pressed()
+    wait(500)
     while True:
         while zerodois.is_floor():
             if zerodois.us_middle.distance() < VIEW_DISTANCE:

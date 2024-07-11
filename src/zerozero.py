@@ -44,17 +44,18 @@ def main():
             ("back_floor", ColorSensor(Port.S3)),
         ],
     )
+    zerozero.wait_button_pressed()
+    wait(500)
 
     THRESHOLD = 500
-    WALK_SPEED = 90
-    TURN_SPEED = 90
-
+    WALK_SPEED = 95
+    TURN_SPEED = 95
     INFRARED_TIME_CYCLE = 500
 
     infrared_seen = 500  # leitura máxima
-
     turn_direction = 1
     last_seen = 1
+
     while True:
         while zerozero.is_floor():
             if turn_direction == 0:
