@@ -41,7 +41,7 @@ MAX_TURN_DEGREES = 400
 
 def main():
     zerodois.wait_button_pressed()
-    wait(500)
+    wait(5000)
     while True:
         while zerodois.is_floor():
             if zerodois.us_middle.distance() < VIEW_DISTANCE:

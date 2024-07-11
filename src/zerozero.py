@@ -45,7 +45,7 @@ def main():
         ],
     )
     zerozero.wait_button_pressed()
-    wait(500)
+    wait(5000)
 
     THRESHOLD = 500
     WALK_SPEED = 95

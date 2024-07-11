@@ -98,7 +98,7 @@ def main():
     direction_choice = choice([1, -1])
 
     tijolao.wait_button_pressed()
-    wait(500)
+    wait(5000)
 
     while True:
         wings()
