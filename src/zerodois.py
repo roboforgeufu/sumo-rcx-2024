@@ -24,7 +24,7 @@ zerodois = FourWheeledSumo(
     right_back_motor_output=Port.C,
     left_back_motor_output=Port.B,
     floor_sensor_output=Port.S1,
-    outside_floor_reflection=50,  # mudou de 60 para 50
+    outside_floor_reflection=16,
     sensors=[
         ("us_right", UltrasonicSensor(Port.S3)),
         ("us_left", UltrasonicSensor(Port.S4)),
@@ -33,7 +33,7 @@ zerodois = FourWheeledSumo(
 )
 VIEW_DISTANCE = 400  # mudou de 500 para 400
 WALK_SPEED = 95
-TURN_SPEED = 50
+TURN_SPEED = 75
 FAST_TURN_SPEED = 95
 SEARCH_CYCLE = 2000
 MAX_TURN_DEGREES = 400
@@ -50,6 +50,7 @@ def search_routine(robot):
 
 def return_manouver(robot):
     # Manobra de retorno
+    robot.hold_motors()
     robot.walk(-WALK_SPEED)
     wait(500)
 
@@ -81,20 +82,15 @@ def main():
     zerodois.wait_button_pressed()
     wait(5000)
     while True:
-        middle_distance = zerodois.us_middle.distance()
-
         while zerodois.is_floor():
-            zerodois.ev3_print(
-                zerodois.stopwatch.time(),
-                zerodois.us_left.distance(),
-                middle_distance,
-                zerodois.us_right.distance(),
-            )
+            middle_distance = zerodois.us_middle.distance()
             # Importante resetar os motores em todas as condições exceto nas manobras de curvas
             if middle_distance < VIEW_DISTANCE:
                 # ataque
                 zerodois.ev3.light.on(Color.GREEN)
+                zerodois.ev3_print("START ATACK")
                 middle_distance = attack_manouver(zerodois, middle_distance)
+                zerodois.ev3_print("END ATACK")
                 zerodois.reset_motors()
 
             elif zerodois.us_left.distance() < VIEW_DISTANCE:

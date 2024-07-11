@@ -68,10 +68,12 @@ class Sumo:
 
     def wait_button_pressed(self, target_button=Button.CENTER):
         self.ev3.speaker.beep()
+        self.ev3_print("WAITING BUTTON")
         while True:
             for button in self.ev3.buttons.pressed():
                 if button == target_button:
-                    break
+                    self.ev3_print("PRESSED")
+                    return
 
     def turn_degrees_to_motor_angle(self, degrees):
         return degrees * (self.wheel_distance / self.wheel_diameter)
@@ -109,23 +111,20 @@ class Sumo:
         return sensor
 
     def is_floor(self):
-        ACCEPTABLE_DIFF = 5
 
-        if self.outside_floor_reflection < 30:
+        if self.outside_floor_reflection < 15:
             # O lado de fora é o mais escuro
-            limit_condition = (
+            is_inside_condition = (
                 self.floor_sensor.reflection() > self.outside_floor_reflection
             )
         else:
             # O lado de fora é o mais claro
-            limit_condition = (
+            is_inside_condition = (
                 self.floor_sensor.reflection() < self.outside_floor_reflection
             )
+        # self.ev3_print("IS_FLOOR", self.floor_sensor.reflection(), is_inside_condition)
 
-        return limit_condition or (
-            abs(self.floor_sensor.reflection() - self.outside_floor_reflection)
-            >= ACCEPTABLE_DIFF
-        )
+        return is_inside_condition
 
 
 class FourWheeledSumo(Sumo):
