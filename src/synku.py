@@ -37,6 +37,7 @@ def main():
         distance = synku.ultra_front.distance()
         if distance < VIEW_DISTANCE:
             while synku.is_floor() and distance < VIEW_DISTANCE:
+                # Enquanto ver o inimigo dentro da arena
                 previous_distance = distance
                 if (
                     distance != 2550
@@ -49,8 +50,7 @@ def main():
                 synku.walk(speed=-80)
                 wait(1500)
         else:
-            while distance > VIEW_DISTANCE:
-                distance = synku.ultra_front.distance()
+            while synku.ultra_front.distance() > VIEW_DISTANCE:
                 if synku.stopwatch.time() > 2000:
                     synku.turn(-35)
                     if synku.stopwatch.time() > 4000:
