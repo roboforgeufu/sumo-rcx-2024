@@ -37,24 +37,25 @@ def main():
         right_back_motor_output=Port.C,
         left_back_motor_output=Port.B,
         floor_sensor_output=Port.S4,
-        outside_floor_reflection=8,
+        outside_floor_reflection=60,
         sensors=[
             ("ir_right", InfraredSensor(Port.S1)),
             ("us_left", UltrasonicSensor(Port.S2)),
             ("back_floor", ColorSensor(Port.S3)),
         ],
     )
+    zerozero.wait_button_pressed()
+    wait(5000)
 
     THRESHOLD = 500
-    WALK_SPEED = 90
-    TURN_SPEED = 90
-
+    WALK_SPEED = 95
+    TURN_SPEED = 95
     INFRARED_TIME_CYCLE = 500
 
     infrared_seen = 500  # leitura máxima
-
     turn_direction = 1
     last_seen = 1
+
     while True:
         while zerozero.is_floor():
             if turn_direction == 0:
