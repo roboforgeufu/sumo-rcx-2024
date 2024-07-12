@@ -37,12 +37,12 @@ tijolao = Sumo(
 
 open_wings = False
 SPEED = 100
-WINGS_ANGLE = 500
+WINGS_ANGLE = 700
 ULTRA_DIST = 500
 INFRA_DIST = 90
 CIRCLE_ANGLE = 1000
-CIRCLE_DIFERENCE = 57
-TURN_VALUE = 150
+CIRCLE_DIFERENCE = 58
+TURN_VALUE = 60
 
 
 def reset_angle():
@@ -77,7 +77,7 @@ def ultrasonic_check():
         tijolao.ultra_right.distance() <= ULTRA_DIST
         or tijolao.ultra_left.distance() <= ULTRA_DIST
     ):
-        if abs(tijolao.ultra_right.distance() - tijolao.ultra_left.distance()) <= 100:
+        if abs(tijolao.ultra_right.distance() - tijolao.ultra_left.distance()) <= 150:
             side = "center"
         elif tijolao.ultra_right.distance() < tijolao.ultra_left.distance():
             side = "right"
@@ -121,20 +121,22 @@ def turn(side, degrees):
 
 def choose_direction(button, button2):
 
+    tijolao.ev3.light.on(Color.GREEN)
+
     if button == Button.DOWN:
         if button2 == Button.RIGHT:
-            while tijolao.right_motor.angle() <= CIRCLE_ANGLE:
+            while abs(tijolao.right_motor.angle()) <= CIRCLE_ANGLE:
                 tijolao.walk(0, -100, -CIRCLE_DIFERENCE)
-            turn("left", TURN_VALUE)
-
-            side = -1
-
-        elif button2 == Button.LEFT:
-            while tijolao.left_motor.angle() <= CIRCLE_ANGLE:
-                tijolao.walk(0, -CIRCLE_DIFERENCE, -100)
-            turn("right", TURN_VALUE)
+            turn("right", TURN_VALUE * 0.8)
 
             side = 1
+
+        elif button2 == Button.LEFT:
+            while abs(tijolao.left_motor.angle()) <= CIRCLE_ANGLE:
+                tijolao.walk(0, -CIRCLE_DIFERENCE, -100)
+            turn("left", TURN_VALUE * 0.8)
+
+            side = -1
 
     if button == Button.UP:
         if button2 == Button.LEFT:
@@ -167,7 +169,9 @@ def main():
         tijolao.ev3_print(button)
 
     tijolao.wait_button_pressed(Button.CENTER, "CENTER TO START")
-    tijolao.ev3_print("LET'S FUCKING GO\nOOOOOOOOOOOO\nOOOOOOOOOOO", clear=True)
+    tijolao.ev3_print(
+        "LET'S FUCKING GO\nOOOOOOOOOO\nOOOOOOOOOOO\n0000000000", clear=True
+    )
     wait(5000)
 
     if button != Button.CENTER:
@@ -178,7 +182,6 @@ def main():
     global open_wings
 
     state = "search"  # pode ser tbm "atk" ou "return" ou "bait"
-    last_state = "search"
     last_side = "none"
 
     while True:
@@ -227,17 +230,11 @@ def main():
                     direction = -1
                     direction_choice = direction
 
-            tijolao.turn(30 * direction)
+                tijolao.turn(30 * direction)
 
-            if last_state == "bait":
-                if (
-                    tijolao.infra_front.distance() < INFRA_DIST
-                    and ultrasonic_check() == "center"
-                ):
-                    state = "atk"
-            else:
-                if tijolao.infra_front.distance() < INFRA_DIST:
-                    state = "atk"
+            if tijolao.infra_front.distance() < INFRA_DIST:
+                state = "atk"
+
         # ATAQUE
         elif state == "atk":
             tijolao.ev3.light.on(Color.RED)
@@ -258,8 +255,8 @@ def main():
             if tijolao.infra_front.distance() > INFRA_DIST and (
                 ultrasonic_check() == "left"
                 or ultrasonic_check() == "right"
-                and tijolao.ultra_right.distance() <= 100
-                or tijolao.ultra_left.distance() <= 100
+                and tijolao.ultra_right.distance() <= 60
+                or tijolao.ultra_left.distance() <= 60
             ):
                 last_side = ultrasonic_check()
                 state = "bait"
@@ -272,9 +269,8 @@ def main():
             # Fecha a asa
             open_wings = False
 
-            desvio(last_side, 600)
+            desvio(last_side, 500)
 
-            last_state = "bait"
             state = "search"
 
 
