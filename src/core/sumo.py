@@ -66,14 +66,18 @@ class Sumo:
             self.ev3.screen.print(*args, **kwargs)
             print(*args, **kwargs)
 
-    def wait_button_pressed(self, target_button=Button.CENTER):
+    def wait_button_pressed(self, target_button=Button.CENTER, string="WAITING BUTTON"):
         self.ev3.speaker.beep()
-        self.ev3_print("WAITING BUTTON")
+        self.ev3_print(string)
+
+        if not isinstance(target_button, list):
+            target_button = [target_button]
+
         while True:
             for button in self.ev3.buttons.pressed():
-                if button == target_button:
+                if button in target_button:
                     self.ev3_print("PRESSED")
-                    return
+                    return button
 
     def turn_degrees_to_motor_angle(self, degrees):
         return degrees * (self.wheel_distance / self.wheel_diameter)
