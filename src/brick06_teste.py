@@ -37,9 +37,12 @@ tijolao = Sumo(
 
 open_wings = False
 SPEED = 100
-WINGS_ANGLE = 800
+WINGS_ANGLE = 500
 ULTRA_DIST = 500
 INFRA_DIST = 90
+CIRCLE_ANGLE = 1000
+CIRCLE_DIFERENCE = 57
+TURN_VALUE = 150
 
 
 def reset_angle():
@@ -103,19 +106,80 @@ def desvio(side, degrees):
     tijolao.hold_motors()
 
 
+def turn(side, degrees):
+
+    reset_angle()
+
+    while (
+        abs(tijolao.right_motor.angle()) + abs(tijolao.left_motor.angle())
+    ) / 2 <= degrees:
+        if side == "right":
+            tijolao.turn(100)
+        elif side == "left":
+            tijolao.turn(-100)
+
+
+def choose_direction(button, button2):
+
+    if button == Button.DOWN:
+        if button2 == Button.RIGHT:
+            while tijolao.right_motor.angle() <= CIRCLE_ANGLE:
+                tijolao.walk(0, -100, -CIRCLE_DIFERENCE)
+            turn("left", TURN_VALUE)
+
+            side = -1
+
+        elif button2 == Button.LEFT:
+            while tijolao.left_motor.angle() <= CIRCLE_ANGLE:
+                tijolao.walk(0, -CIRCLE_DIFERENCE, -100)
+            turn("right", TURN_VALUE)
+
+            side = 1
+
+    if button == Button.UP:
+        if button2 == Button.LEFT:
+            while tijolao.right_motor.angle() <= CIRCLE_ANGLE:
+                tijolao.walk(0, CIRCLE_DIFERENCE, 100)
+            turn("left", TURN_VALUE)
+
+            side = -1
+
+        elif button2 == Button.RIGHT:
+            while tijolao.left_motor.angle() <= CIRCLE_ANGLE:
+                tijolao.walk(0, 100, CIRCLE_DIFERENCE)
+            turn("right", TURN_VALUE)
+
+            side = 1
+
+    return side
+
+
 def main():
 
-    tijolao.wait_button_pressed()
+    button = tijolao.wait_button_pressed(
+        [Button.UP, Button.CENTER, Button.DOWN], "PATH:"
+    )
+    if button != Button.CENTER:
+        button2 = tijolao.wait_button_pressed([Button.LEFT, Button.RIGHT], button)
+        tijolao.ev3_print("PATH:\n", button, "\n", button2, clear=True)
+
+    else:
+        tijolao.ev3_print(button)
+
+    tijolao.wait_button_pressed(Button.CENTER, "CENTER TO START")
+    tijolao.ev3_print("LET'S FUCKING GO\nOOOOOOOOOOOO\nOOOOOOOOOOO", clear=True)
     wait(5000)
 
-    global open_wings
+    if button != Button.CENTER:
+        direction_choice = choose_direction(button, button2)
+    else:
+        direction_choice = choice([1, -1])
 
-    print(open_wings, tijolao.wings_motor.angle())
+    global open_wings
 
     state = "search"  # pode ser tbm "atk" ou "return" ou "bait"
     last_state = "search"
     last_side = "none"
-    direction_choice = choice([1, -1])
 
     while True:
 
@@ -208,7 +272,7 @@ def main():
             # Fecha a asa
             open_wings = False
 
-            desvio(last_side, 400)
+            desvio(last_side, 600)
 
             last_state = "bait"
             state = "search"
